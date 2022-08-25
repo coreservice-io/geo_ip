@@ -1,4 +1,4 @@
-package local
+package lib
 
 import (
 	"bufio"
@@ -24,7 +24,7 @@ type SORT_GEO_IP struct {
 	Asn            string
 }
 
-type Ip2LClient struct {
+type GeoIpClient struct {
 	geo_ip_list []SORT_GEO_IP
 }
 
@@ -41,9 +41,9 @@ func IpToBigInt(ip net.IP) (*big.Int, error) {
 	}
 }
 
-func NewIp2L(ip_geo_file_abs string) (GeoIpLocalI, error) {
+func NewClient(ip_geo_file_abs string) (GeoIpInterface, error) {
 
-	client := &Ip2LClient{}
+	client := &GeoIpClient{}
 
 	///////////////////////////////////////////////////////////////
 	ip_asn_d_f, err := os.Open(ip_geo_file_abs)
@@ -119,7 +119,7 @@ func NewIp2L(ip_geo_file_abs string) (GeoIpLocalI, error) {
 	return client, nil
 }
 
-func (i *Ip2LClient) GetLocalInfo(target_ip string) (*GeoLocalInfo, error) {
+func (i *GeoIpClient) GetInfo(target_ip string) (*GeoInfo, error) {
 
 	//pre check ip
 	isLan, err := data.IsLanIp(target_ip)
@@ -135,7 +135,7 @@ func (i *Ip2LClient) GetLocalInfo(target_ip string) (*GeoLocalInfo, error) {
 		return nil, err
 	}
 
-	result := GeoLocalInfo{
+	result := GeoInfo{
 		Ip:            target_ip,
 		Latitude:      0,
 		Longitude:     0,

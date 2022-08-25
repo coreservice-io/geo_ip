@@ -1,6 +1,6 @@
-package local
+package lib
 
-type GeoLocalInfo struct {
+type GeoInfo struct {
 	Ip            string
 	Country_code  string
 	Region        string
@@ -11,7 +11,7 @@ type GeoLocalInfo struct {
 }
 
 type (
-	GeoIpLocalI interface {
-		GetLocalInfo(ip string) (*GeoLocalInfo, error)
+	GeoIpInterface interface {
+		GetInfo(ip string) (*GeoInfo, error)
 	}
 )
