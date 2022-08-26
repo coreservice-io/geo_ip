@@ -1,5 +1,7 @@
 package data
 
+const AllContinent = "AllContinent"
+const AllCountry = "AllCountry"
 const NA = "N/A"
 
 var ContinentList = map[string]string{
