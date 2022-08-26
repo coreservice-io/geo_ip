@@ -136,13 +136,16 @@ func (i *GeoIpClient) GetInfo(target_ip string) (*GeoInfo, error) {
 	}
 
 	result := GeoInfo{
-		Ip:            target_ip,
-		Latitude:      0,
-		Longitude:     0,
-		Country_code:  data.NA,
-		Region:        data.NA,
-		Asn:           data.NA,
-		Is_datacenter: false,
+		Ip:             target_ip,
+		Latitude:       0,
+		Longitude:      0,
+		Country_code:   data.NA,
+		Country_name:   data.NA,
+		Continent_code: data.NA,
+		Continent_name: data.NA,
+		Region:         data.NA,
+		Asn:            data.NA,
+		Is_datacenter:  false,
 	}
 
 	//////////////
@@ -157,6 +160,12 @@ func (i *GeoIpClient) GetInfo(target_ip string) (*GeoInfo, error) {
 		result.Longitude = i.geo_ip_list[index].Longitude
 		result.Country_code = i.geo_ip_list[index].Country_code
 		result.Region = i.geo_ip_list[index].Region
+
+		if val, ok := data.CountryList[result.Country_code]; ok {
+			result.Continent_code = val.ContinentCode
+			result.Continent_name = val.ContinentName
+			result.Country_name = val.CountryName
+		}
 	}
 
 	return &result, nil
