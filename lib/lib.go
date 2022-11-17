@@ -3,6 +3,7 @@ package lib
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"math/big"
 	"net"
 	"os"
@@ -18,6 +19,7 @@ type SORT_GEO_IP struct {
 	Start_ip_score *big.Int
 	Country_code   string
 	Region         string
+	Isp            string
 	Latitude       float64
 	Longitude      float64
 	Is_datacenter  bool
@@ -28,7 +30,7 @@ type GeoIpClient struct {
 	geo_ip_list []SORT_GEO_IP
 }
 
-/// the second int is 32 for ipv4 or 128 for ipv6
+// / the second int is 32 for ipv4 or 128 for ipv6
 func IpToBigInt(ip net.IP) (*big.Int, error) {
 	val := &big.Int{}
 	val.SetBytes([]byte(ip))
@@ -66,6 +68,7 @@ func NewClient(ip_geo_file_abs string) (GeoIpInterface, error) {
 			Is_datacenter:  false,
 			Country_code:   line_split_array[3],
 			Region:         line_split_array[4],
+			Isp:            line_split_array[5],
 			Latitude:       0,
 			Longitude:      0,
 		}
@@ -88,13 +91,15 @@ func NewClient(ip_geo_file_abs string) (GeoIpInterface, error) {
 		}
 
 		/////////////
-		lati, err := strconv.ParseFloat(line_split_array[5], 64)
+		lati, err := strconv.ParseFloat(line_split_array[6], 64)
 		if err != nil {
+			fmt.Println(line_split_array)
 			return nil, err
 		}
 
-		longi, err := strconv.ParseFloat(line_split_array[6], 64)
+		longi, err := strconv.ParseFloat(line_split_array[7], 64)
 		if err != nil {
+			fmt.Println(line_split_array)
 			return nil, err
 		}
 
@@ -145,6 +150,7 @@ func (i *GeoIpClient) GetInfo(target_ip string) (*GeoInfo, error) {
 		Continent_name: data.NA,
 		Region:         data.NA,
 		Asn:            data.NA,
+		Isp:            data.NA,
 		Is_datacenter:  false,
 	}
 
@@ -160,6 +166,7 @@ func (i *GeoIpClient) GetInfo(target_ip string) (*GeoInfo, error) {
 		result.Longitude = i.geo_ip_list[index].Longitude
 		result.Country_code = i.geo_ip_list[index].Country_code
 		result.Region = i.geo_ip_list[index].Region
+		result.Isp = i.geo_ip_list[index].Isp
 
 		if val, ok := data.CountryList[result.Country_code]; ok {
 			result.Continent_code = val.ContinentCode

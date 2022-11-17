@@ -4,6 +4,7 @@ type GeoInfo struct {
 	Ip string
 
 	Region        string
+	Isp           string
 	Latitude      float64
 	Longitude     float64
 	Is_datacenter bool
