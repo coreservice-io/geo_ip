@@ -207,7 +207,7 @@ func NewClient(
 		return nil, err
 	}
 	///
-	err = client.init_country(country_ipv4_file_abs, "ipv6")
+	err = client.init_country(country_ipv6_file_abs, "ipv6")
 	if err != nil {
 		return nil, err
 	}
@@ -277,9 +277,15 @@ func (i *GeoIpClient) GetInfo(target_ip string) (*GeoInfo, error) {
 	}
 	////
 
+	// fmt.Println("ip_type", ip_type)
+	// fmt.Println("target_ip_score", target_ip_score)
+	// fmt.Println("search_country", len(search_country))
+
 	country_index := sort.Search(len(search_country), func(j int) bool {
 		return search_country[j].Start_ip_score.Cmp(target_ip_score) <= 0
 	})
+
+	//fmt.Println(country_index)
 
 	if country_index >= 0 && country_index < len(search_country) {
 		result.Latitude = search_country[country_index].Latitude
