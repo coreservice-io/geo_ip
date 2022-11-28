@@ -91,15 +91,28 @@ func (geoip_c *GeoIpClient) init_country(country_abs_file string, ip_type string
 		}
 
 		/////////////
-		ipint, err := IpToBigInt(net.ParseIP(line_split_array[0]))
-		if err != nil {
-			return err
-		}
-		record.Start_ip_score = ipint
-
 		if ip_type == "ipv4" {
+			ipv4_ := net.ParseIP(line_split_array[0])
+			if ipv4_.To4() == nil {
+				return errors.New(line_split_array[0] + "is not ipv4 [country]")
+			}
+			ipint, err := IpToBigInt(ipv4_)
+			if err != nil {
+				return err
+			}
+			record.Start_ip_score = ipint
 			geoip_c.country_ipv4_list = append(geoip_c.country_ipv4_list, record)
 		} else {
+
+			ipv6_ := net.ParseIP(line_split_array[0])
+			if ipv6_.To16() == nil {
+				return errors.New(line_split_array[0] + "is not ipv6 [country]")
+			}
+			ipint, err := IpToBigInt(ipv6_)
+			if err != nil {
+				return err
+			}
+			record.Start_ip_score = ipint
 			geoip_c.country_ipv6_list = append(geoip_c.country_ipv6_list, record)
 		}
 	}
@@ -160,15 +173,27 @@ func (geoip_c *GeoIpClient) init_isp(isp_abs_file string, ip_type string) error 
 		}
 
 		/////////////
-		ipint, err := IpToBigInt(net.ParseIP(record.Start_ip))
-		if err != nil {
-			return err
-		}
-		record.Start_ip_score = ipint
-
 		if ip_type == "ipv4" {
+			ipv4_ := net.ParseIP(record.Start_ip)
+			if ipv4_.To4() == nil {
+				return errors.New(record.Start_ip + " is not ipv4 [isp]")
+			}
+			ipint, err := IpToBigInt(ipv4_)
+			if err != nil {
+				return err
+			}
+			record.Start_ip_score = ipint
 			geoip_c.isp_ipv4_list = append(geoip_c.isp_ipv4_list, record)
 		} else {
+			ipv6_ := net.ParseIP(record.Start_ip)
+			if ipv6_.To16() == nil {
+				return errors.New(record.Start_ip + " is not ipv6 [isp]")
+			}
+			ipint, err := IpToBigInt(ipv6_)
+			if err != nil {
+				return err
+			}
+			record.Start_ip_score = ipint
 			geoip_c.isp_ipv6_list = append(geoip_c.isp_ipv6_list, record)
 		}
 	}
