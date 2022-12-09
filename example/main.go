@@ -18,7 +18,7 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	log.Println(client.GetInfo("185.7.108.0"))
+	log.Println(client.GetInfo("212.50.254.19"))
 	log.Println(client.GetInfo("39.144.103.149"))
 	log.Println(client.GetInfo("20.205.11.231"))
 	log.Println(client.GetInfo("222.64.171.253"))
@@ -26,5 +26,4 @@ func main() {
 	log.Println(client.GetInfo("192.168.189.125"))
 	log.Println(client.GetInfo("2600:4040:a912:a200:a438:9968:96d9:c3e4"))
 	log.Println(client.GetInfo("2600:387:1:809::3a"))
-
 }
