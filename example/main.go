@@ -9,7 +9,7 @@ import (
 
 func main() {
 
-	client, err := lib.NewClient("./example", true, func(logstr string) {
+	client, err := lib.NewClient("0.0.2", "./example", true, func(logstr string) {
 		log.Println(logstr)
 	})
 

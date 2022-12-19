@@ -6,10 +6,10 @@ import (
 	"github.com/coreservice-io/package_client"
 )
 
-func StartAutoUpdate(sync_remote_update_secs bool, ini_update bool, download_folder string, update_success_callback func(), logger func(string)) {
+func StartAutoUpdate(current_version string, sync_remote_update_secs bool, ini_update bool, download_folder string, update_success_callback func(), logger func(string)) {
 
 	pc, _ := package_client.NewPackageClient(AUTO_UPDATE_CONFIG_TOKEN, AUTO_UPDATE_CONFIG_PACKAGEID,
-		AUTO_UPDATE_CONFIG_CURRENT_VERSION, sync_remote_update_secs, func(pc *package_client.PackageClient, m *package_client.Msg_resp_app_version, err error) bool {
+		current_version, sync_remote_update_secs, func(pc *package_client.PackageClient, m *package_client.Msg_resp_app_version, err error) bool {
 
 			if err == nil {
 				app_detail_s := &package_client.AppDetail_Standard{}
