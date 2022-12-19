@@ -2,17 +2,16 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"github.com/coreservice-io/geo_ip/lib"
 )
 
 func main() {
 
-	client, err := lib.NewClient(
-		"./example/country_ipv4.csv",
-		"./example/country_ipv6.csv",
-		"./example/isp_ipv4.csv",
-		"./example/isp_ipv6.csv")
+	client, err := lib.NewClient("./example", true, func(logstr string) {
+		log.Println(logstr)
+	})
 
 	if err != nil {
 		log.Fatalln(err)
@@ -31,11 +30,6 @@ func main() {
 	log.Println(client.GetInfo("107.164.105.2"))
 	log.Println(client.GetInfo("107.164.105.30"))
 
-	// log.Println(client.GetInfo("39.144.103.149"))
-	// log.Println(client.GetInfo("20.205.11.231"))
-	// log.Println(client.GetInfo("222.64.171.253"))
-	// log.Println(client.GetInfo("129.146.243.246"))
-	// log.Println(client.GetInfo("192.168.189.125"))
-	// log.Println(client.GetInfo("2600:4040:a912:a200:a438:9968:96d9:c3e4"))
-	// log.Println(client.GetInfo("2600:387:1:809::3a"))
+	time.Sleep(5 * time.Hour)
+
 }

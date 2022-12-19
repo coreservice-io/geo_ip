@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"net"
 	"os"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -219,11 +220,12 @@ func (geoip_c *GeoIpClient) init_isp(isp_abs_file string, ip_type string) error 
 	return nil
 }
 
-func NewClient(
-	country_ipv4_file_abs string,
-	country_ipv6_file_abs string,
-	isp_ipv4_file_abs string,
-	isp_ipv6_file_abs string) (GeoIpInterface, error) {
+func NewClient(datafolder string, auto_update bool, logger func(string)) (GeoIpInterface, error) {
+
+	country_ipv4_file_abs := filepath.Join(datafolder, "country_ipv4.csv")
+	country_ipv6_file_abs := filepath.Join(datafolder, "country_ipv6.csv")
+	isp_ipv4_file_abs := filepath.Join(datafolder, "isp_ipv4.csv")
+	isp_ipv6_file_abs := filepath.Join(datafolder, "isp_ipv6.csv")
 
 	client := &GeoIpClient{}
 	////
@@ -246,6 +248,9 @@ func NewClient(
 	if err != nil {
 		return nil, err
 	}
+
+	///
+	StartAutoUpdate(false, true, datafolder, logger)
 
 	////////////////////////
 	return client, nil

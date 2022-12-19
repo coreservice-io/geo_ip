@@ -1,0 +1,4 @@
+github.com/coreservice-io/package_client v0.0.5 h1:PSL1BPAuUXwpVU4EqdCoXQMSaA6PU+OglmrO1ChICxY=
+github.com/coreservice-io/package_client v0.0.5/go.mod h1:awWNNMgatNRE802IxX1Q7RQLfxE+OZNuP0zHybxW6Kg=
+github.com/imroc/req v0.3.2 h1:M/JkeU6RPmX+WYvT2vaaOL0K+q8ufL5LxwvJc4xeB4o=
+github.com/imroc/req v0.3.2/go.mod h1:F+NZ+2EFSo6EFXdeIbpfE9hcC233id70kf0byW97Caw=
