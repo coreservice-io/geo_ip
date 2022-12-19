@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -9,8 +10,10 @@ import (
 
 func main() {
 
-	client, err := lib.NewClient("0.0.2", "./example", true, func(logstr string) {
-		log.Println(logstr)
+	client, err := lib.NewClient("0.0.8", "./example", func(log_str string) {
+		fmt.Println("log_str:" + log_str)
+	}, func(err_log_str string) {
+		fmt.Println("err_log_str:" + err_log_str)
 	})
 
 	if err != nil {
@@ -18,19 +21,13 @@ func main() {
 		return
 	}
 
-	log.Println(client.GetInfo("176.119.148.39"))
-	log.Println(client.GetInfo("103.140.9.84"))
-	log.Println(client.GetInfo("94.72.140.55"))
-	log.Println(client.GetInfo("103.177.80.154"))
-	log.Println(client.GetInfo("154.19.185.171"))
-	log.Println(client.GetInfo("202.81.232.120"))
-	log.Println(client.GetInfo("38.6.229.3"))
+	log.Println(client.GetInfo("172.104.160.0"))
+	log.Println(client.GetInfo("178.239.197.0"))
 
-	log.Println(client.GetInfo("123.118.103.129"))
-	log.Println(client.GetInfo("185.100.232.166"))
-	log.Println(client.GetInfo("107.164.105.2"))
-	log.Println(client.GetInfo("107.164.105.30"))
+	time.Sleep(30 * time.Second)
 
-	time.Sleep(5 * time.Hour)
+	log.Println(client.GetInfo("172.104.160.0"))
+	log.Println(client.GetInfo("178.239.197.0"))
 
+	time.Sleep(30 * time.Hour)
 }

@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/coreservice-io/geo_ip/data"
+	"github.com/coreservice-io/package_client"
 )
 
 type SORT_ISP_IP struct {
@@ -36,6 +37,7 @@ type GeoIpClient struct {
 	country_ipv6_list []SORT_COUNTRY_IP
 	isp_ipv4_list     []SORT_ISP_IP
 	isp_ipv6_list     []SORT_ISP_IP
+	pc                *package_client.PackageClient
 }
 
 // / the second int is 32 for ipv4 or 128 for ipv6
@@ -267,7 +269,7 @@ func (gip_client *GeoIpClient) ReloadCsv(datafolder string) error {
 	return nil
 }
 
-func NewClient(current_version string, datafolder string, init_update bool, logger func(string)) (GeoIpInterface, error) {
+func NewClient(current_version string, datafolder string, logger func(log_str string), err_logger func(err_log_str string)) (GeoIpInterface, error) {
 
 	client := &GeoIpClient{}
 	load_err := client.ReloadCsv(datafolder)
@@ -276,12 +278,22 @@ func NewClient(current_version string, datafolder string, init_update bool, logg
 		return nil, load_err
 	}
 	///
-	StartAutoUpdate(current_version, false, init_update, datafolder, func() {
+	pc, err := StartAutoUpdate(current_version, false, datafolder, func() {
 		client.ReloadCsv(datafolder)
-	}, logger)
+	}, logger, err_logger)
+
+	if err != nil {
+		logger("StartAutoUpdate err:" + err.Error())
+	}
+
+	client.pc = pc
 
 	////////////////////////
 	return client, nil
+}
+
+func (i *GeoIpClient) Upgrade() error {
+	return i.pc.Update()
 }
 
 func (i *GeoIpClient) GetInfo(target_ip string) (*GeoInfo, error) {
@@ -334,10 +346,6 @@ func (i *GeoIpClient) GetInfo(target_ip string) (*GeoInfo, error) {
 		search_isp = i.isp_ipv6_list
 	}
 	////
-
-	// fmt.Println("ip_type", ip_type)
-	// fmt.Println("target_ip_score", target_ip_score)
-	// fmt.Println("search_country", len(search_country))
 
 	country_index := sort.Search(len(search_country), func(j int) bool {
 		return search_country[j].Start_ip_score.Cmp(target_ip_score) <= 0

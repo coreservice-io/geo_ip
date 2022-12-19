@@ -19,5 +19,6 @@ type GeoInfo struct {
 type (
 	GeoIpInterface interface {
 		GetInfo(ip string) (*GeoInfo, error)
+		Upgrade() error
 	}
 )
