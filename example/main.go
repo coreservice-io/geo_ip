@@ -15,6 +15,7 @@ func main() {
 
 	if err != nil {
 		log.Fatalln(err)
+		return
 	}
 
 	log.Println(client.GetInfo("176.119.148.39"))

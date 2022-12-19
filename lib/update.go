@@ -6,7 +6,7 @@ import (
 	"github.com/coreservice-io/package_client"
 )
 
-func StartAutoUpdate(sync_remote_update_secs bool, ini_update bool, download_folder string, logger func(string)) {
+func StartAutoUpdate(sync_remote_update_secs bool, ini_update bool, download_folder string, update_success_callback func(), logger func(string)) {
 
 	pc, _ := package_client.NewPackageClient(AUTO_UPDATE_CONFIG_TOKEN, AUTO_UPDATE_CONFIG_PACKAGEID,
 		AUTO_UPDATE_CONFIG_CURRENT_VERSION, sync_remote_update_secs, func(pc *package_client.PackageClient, m *package_client.Msg_resp_app_version, err error) bool {
@@ -19,6 +19,7 @@ func StartAutoUpdate(sync_remote_update_secs bool, ini_update bool, download_fol
 					if download_err == nil {
 						unziperr := package_client.UnZipTo(filepath.Join(download_folder, "temp"), download_folder, true)
 						if unziperr == nil {
+							update_success_callback()
 							return true
 						}
 					}

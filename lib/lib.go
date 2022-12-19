@@ -65,6 +65,9 @@ func (geoip_c *GeoIpClient) init_country(country_abs_file string, ip_type string
 	}
 	defer country_ip_f.Close()
 
+	country_ipv4_list := []SORT_COUNTRY_IP{}
+	country_ipv6_list := []SORT_COUNTRY_IP{}
+
 	country_ip_scanner := bufio.NewScanner(country_ip_f)
 
 	for country_ip_scanner.Scan() {
@@ -102,7 +105,7 @@ func (geoip_c *GeoIpClient) init_country(country_abs_file string, ip_type string
 				return err
 			}
 			record.Start_ip_score = ipint
-			geoip_c.country_ipv4_list = append(geoip_c.country_ipv4_list, record)
+			country_ipv4_list = append(country_ipv4_list, record)
 		} else {
 
 			ipv6_ := net.ParseIP(line_split_array[0])
@@ -114,28 +117,34 @@ func (geoip_c *GeoIpClient) init_country(country_abs_file string, ip_type string
 				return err
 			}
 			record.Start_ip_score = ipint
-			geoip_c.country_ipv6_list = append(geoip_c.country_ipv6_list, record)
+			country_ipv6_list = append(country_ipv6_list, record)
 		}
 	}
 
 	if ip_type == "ipv4" {
 		//////// sort  start ip desc ///////////////////
-		sort.SliceStable(geoip_c.country_ipv4_list, func(i, j int) bool {
-			return geoip_c.country_ipv4_list[i].Start_ip_score.Cmp(geoip_c.country_ipv4_list[j].Start_ip_score) == 1
+		sort.SliceStable(country_ipv4_list, func(i, j int) bool {
+			return country_ipv4_list[i].Start_ip_score.Cmp(country_ipv4_list[j].Start_ip_score) == 1
 		})
 		////
-		if len(geoip_c.country_ipv4_list) == 0 {
+		if len(country_ipv4_list) == 0 {
 			return errors.New("country_ipv4_list len :0 ")
 		}
+
+		geoip_c.country_ipv4_list = country_ipv4_list
+
 	} else {
 		//////// sort  start ip desc ///////////////////
-		sort.SliceStable(geoip_c.country_ipv6_list, func(i, j int) bool {
-			return geoip_c.country_ipv6_list[i].Start_ip_score.Cmp(geoip_c.country_ipv6_list[j].Start_ip_score) == 1
+		sort.SliceStable(country_ipv6_list, func(i, j int) bool {
+			return country_ipv6_list[i].Start_ip_score.Cmp(country_ipv6_list[j].Start_ip_score) == 1
 		})
-		if len(geoip_c.country_ipv6_list) == 0 {
+		if len(country_ipv6_list) == 0 {
 			return errors.New("country_ipv6_list len :0 ")
 		}
+
+		geoip_c.country_ipv6_list = country_ipv6_list
 	}
+
 	return nil
 }
 
@@ -152,6 +161,9 @@ func (geoip_c *GeoIpClient) init_isp(isp_abs_file string, ip_type string) error 
 		return err
 	}
 	defer isp_ip_f.Close()
+
+	isp_ipv4_list := []SORT_ISP_IP{}
+	isp_ipv6_list := []SORT_ISP_IP{}
 
 	isp_ip_scanner := bufio.NewScanner(isp_ip_f)
 
@@ -184,7 +196,7 @@ func (geoip_c *GeoIpClient) init_isp(isp_abs_file string, ip_type string) error 
 				return err
 			}
 			record.Start_ip_score = ipint
-			geoip_c.isp_ipv4_list = append(geoip_c.isp_ipv4_list, record)
+			isp_ipv4_list = append(isp_ipv4_list, record)
 		} else {
 			ipv6_ := net.ParseIP(record.Start_ip)
 			if ipv6_.To16() == nil {
@@ -195,62 +207,78 @@ func (geoip_c *GeoIpClient) init_isp(isp_abs_file string, ip_type string) error 
 				return err
 			}
 			record.Start_ip_score = ipint
-			geoip_c.isp_ipv6_list = append(geoip_c.isp_ipv6_list, record)
+			isp_ipv6_list = append(isp_ipv6_list, record)
 		}
 	}
 
 	if ip_type == "ipv4" {
 		//////// sort  start ip desc ///////////////////
-		sort.SliceStable(geoip_c.isp_ipv4_list, func(i, j int) bool {
-			return geoip_c.isp_ipv4_list[i].Start_ip_score.Cmp(geoip_c.isp_ipv4_list[j].Start_ip_score) == 1
+		sort.SliceStable(isp_ipv4_list, func(i, j int) bool {
+			return isp_ipv4_list[i].Start_ip_score.Cmp(isp_ipv4_list[j].Start_ip_score) == 1
 		})
-		if len(geoip_c.isp_ipv4_list) == 0 {
+		if len(isp_ipv4_list) == 0 {
 			return errors.New("isp_ipv4_list len :0 ")
 		}
+		geoip_c.isp_ipv4_list = isp_ipv4_list
 	} else {
 		//////// sort  start ip desc ///////////////////
-		sort.SliceStable(geoip_c.isp_ipv6_list, func(i, j int) bool {
-			return geoip_c.isp_ipv6_list[i].Start_ip_score.Cmp(geoip_c.isp_ipv6_list[j].Start_ip_score) == 1
+		sort.SliceStable(isp_ipv6_list, func(i, j int) bool {
+			return isp_ipv6_list[i].Start_ip_score.Cmp(isp_ipv6_list[j].Start_ip_score) == 1
 		})
-		if len(geoip_c.isp_ipv6_list) == 0 {
+		if len(isp_ipv6_list) == 0 {
 			return errors.New("isp_ipv6_list len :0 ")
 		}
+		geoip_c.isp_ipv6_list = isp_ipv6_list
 	}
 
 	return nil
 }
 
-func NewClient(datafolder string, auto_update bool, logger func(string)) (GeoIpInterface, error) {
+func (gip_client *GeoIpClient) ReloadCsv(datafolder string) error {
 
 	country_ipv4_file_abs := filepath.Join(datafolder, "country_ipv4.csv")
 	country_ipv6_file_abs := filepath.Join(datafolder, "country_ipv6.csv")
 	isp_ipv4_file_abs := filepath.Join(datafolder, "isp_ipv4.csv")
 	isp_ipv6_file_abs := filepath.Join(datafolder, "isp_ipv6.csv")
 
-	client := &GeoIpClient{}
 	////
-	err := client.init_country(country_ipv4_file_abs, "ipv4")
+	err := gip_client.init_country(country_ipv4_file_abs, "ipv4")
 	if err != nil {
-		return nil, err
+		return err
 	}
 	///
-	err = client.init_country(country_ipv6_file_abs, "ipv6")
+	err = gip_client.init_country(country_ipv6_file_abs, "ipv6")
 	if err != nil {
-		return nil, err
+		return err
 	}
 	///
-	err = client.init_isp(isp_ipv4_file_abs, "ipv4")
+	err = gip_client.init_isp(isp_ipv4_file_abs, "ipv4")
 	if err != nil {
-		return nil, err
+		return err
 	}
 	///
-	err = client.init_isp(isp_ipv6_file_abs, "ipv6")
+	err = gip_client.init_isp(isp_ipv6_file_abs, "ipv6")
 	if err != nil {
-		return nil, err
+		return err
 	}
 
+	//fmt.Println(len(gip_client.country_ipv4_list))
+
+	return nil
+}
+
+func NewClient(datafolder string, auto_update bool, logger func(string)) (GeoIpInterface, error) {
+
+	client := &GeoIpClient{}
+	load_err := client.ReloadCsv(datafolder)
+	if load_err != nil {
+		logger("load_err:" + load_err.Error())
+		return nil, load_err
+	}
 	///
-	StartAutoUpdate(false, true, datafolder, logger)
+	StartAutoUpdate(false, true, datafolder, func() {
+		client.ReloadCsv(datafolder)
+	}, logger)
 
 	////////////////////////
 	return client, nil
