@@ -267,7 +267,7 @@ func (gip_client *GeoIpClient) ReloadCsv(datafolder string) error {
 	return nil
 }
 
-func NewClient(datafolder string, auto_update bool, logger func(string)) (GeoIpInterface, error) {
+func NewClient(datafolder string, init_update bool, logger func(string)) (GeoIpInterface, error) {
 
 	client := &GeoIpClient{}
 	load_err := client.ReloadCsv(datafolder)
@@ -276,7 +276,7 @@ func NewClient(datafolder string, auto_update bool, logger func(string)) (GeoIpI
 		return nil, load_err
 	}
 	///
-	StartAutoUpdate(false, true, datafolder, func() {
+	StartAutoUpdate(false, init_update, datafolder, func() {
 		client.ReloadCsv(datafolder)
 	}, logger)
 
