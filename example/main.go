@@ -10,7 +10,7 @@ import (
 
 func main() {
 
-	client, err := lib.NewClient("0.0.8", "./example", func(log_str string) {
+	client, err := lib.NewClient("0.0.10", "./example", func(log_str string) {
 		fmt.Println("log_str:" + log_str)
 	}, func(err_log_str string) {
 		fmt.Println("err_log_str:" + err_log_str)
