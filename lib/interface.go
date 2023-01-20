@@ -8,6 +8,7 @@ type GeoInfo struct {
 	Continent_code string
 	Continent_name string
 	Region         string
+	City           string
 	Latitude       float64
 	Longitude      float64
 

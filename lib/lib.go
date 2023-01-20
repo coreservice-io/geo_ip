@@ -28,6 +28,7 @@ type SORT_COUNTRY_IP struct {
 	Start_ip_score *big.Int
 	Country_code   string
 	Region         string
+	City           string
 	Latitude       float64
 	Longitude      float64
 }
@@ -82,15 +83,16 @@ func (geoip_c *GeoIpClient) init_country(country_abs_file string, ip_type string
 			Start_ip_score: nil,
 			Country_code:   line_split_array[1],
 			Region:         line_split_array[2],
+			City:           line_split_array[3],
 		}
 
-		if lati, err := strconv.ParseFloat(line_split_array[3], 64); err != nil {
+		if lati, err := strconv.ParseFloat(line_split_array[4], 64); err != nil {
 			return err
 		} else {
 			record.Latitude = lati
 		}
 
-		if longti, err := strconv.ParseFloat(line_split_array[4], 64); err != nil {
+		if longti, err := strconv.ParseFloat(line_split_array[5], 64); err != nil {
 			return err
 		} else {
 			record.Longitude = longti
@@ -332,6 +334,7 @@ func (i *GeoIpClient) GetInfo(target_ip string) (*GeoInfo, error) {
 		Continent_code: data.NA,
 		Continent_name: data.NA,
 		Region:         data.NA,
+		City:           data.NA,
 		Asn:            data.NA,
 		Isp:            data.NA,
 		Is_datacenter:  false,
@@ -358,6 +361,7 @@ func (i *GeoIpClient) GetInfo(target_ip string) (*GeoInfo, error) {
 		result.Longitude = search_country[country_index].Longitude
 		result.Country_code = search_country[country_index].Country_code
 		result.Region = search_country[country_index].Region
+		result.City = search_country[country_index].City
 
 		if val, ok := data.CountryList[result.Country_code]; ok {
 			result.Continent_code = val.ContinentCode

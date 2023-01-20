@@ -23,11 +23,11 @@ func main() {
 
 	log.Println(client.GetInfo("172.104.160.0"))
 	log.Println(client.GetInfo("178.239.197.0"))
+	log.Println(client.GetInfo("116.227.21.107"))
 
 	time.Sleep(30 * time.Second)
 
 	log.Println(client.GetInfo("172.104.160.0"))
-	log.Println(client.GetInfo("178.239.197.0"))
 
 	time.Sleep(30 * time.Hour)
 }
