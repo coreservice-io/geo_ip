@@ -21,8 +21,8 @@ func main() {
 		return
 	}
 
-	log.Println(client.GetInfo("172.104.160.0"))
-	log.Println(client.GetInfo("178.239.197.0"))
+	log.Println(client.GetInfo("104.233.16.169"))
+	log.Println(client.GetInfo("5.78.52.174"))
 	log.Println(client.GetInfo("116.227.21.107"))
 
 	time.Sleep(30 * time.Second)
