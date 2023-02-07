@@ -2,3 +2,6 @@
 data/.DS_Store
 example/.DS_Store
 lib/.DS_Store
+
+example/*
+!example/main.go
