@@ -266,18 +266,18 @@ func (gip_client *GeoIpClient) ReloadCsv(datafolder string) error {
 		return err
 	}
 
-	//fmt.Println(len(gip_client.country_ipv4_list))
-
 	return nil
 }
 
-func NewClient(update_key string, current_version string, datafolder string, logger func(log_str string), err_logger func(err_log_str string)) (GeoIpInterface, error) {
+func NewClient(update_key string, current_version string, datafolder string, ignore_data_exist bool, logger func(log_str string), err_logger func(err_log_str string)) (GeoIpInterface, error) {
 
 	client := &GeoIpClient{}
-	load_err := client.ReloadCsv(datafolder)
-	if load_err != nil {
-		logger("load_err:" + load_err.Error())
-		return nil, load_err
+	if !ignore_data_exist {
+		load_err := client.ReloadCsv(datafolder)
+		if load_err != nil {
+			logger("load_err:" + load_err.Error())
+			return nil, load_err
+		}
 	}
 	///
 	pc, err := StartAutoUpdate(update_key, current_version, false, datafolder, func() {
@@ -289,13 +289,12 @@ func NewClient(update_key string, current_version string, datafolder string, log
 	}
 
 	client.pc = pc
-
 	////////////////////////
 	return client, nil
 }
 
-func (i *GeoIpClient) Upgrade() error {
-	return i.pc.Update()
+func (i *GeoIpClient) Upgrade(ignore_version bool) error {
+	return i.pc.Update(ignore_version)
 }
 
 func (i *GeoIpClient) GetInfo(target_ip string) (*GeoInfo, error) {

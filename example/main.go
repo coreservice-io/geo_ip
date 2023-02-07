@@ -12,15 +12,8 @@ const geo_ip_update_key = ""
 
 func main() {
 
-	update_err := lib.Update(geo_ip_update_key, "./example", func(s string) {
-		fmt.Println("logstr:", s)
-	})
-	if update_err != nil {
-		panic(update_err)
-	}
-
 	//////////
-	client, err := lib.NewClient(geo_ip_update_key, "0.0.24", "./example", func(log_str string) {
+	client, err := lib.NewClient(geo_ip_update_key, "0.0.24", "./example", true, func(log_str string) {
 		fmt.Println("log_str:" + log_str)
 	}, func(err_log_str string) {
 		fmt.Println("err_log_str:" + err_log_str)
@@ -28,6 +21,13 @@ func main() {
 
 	if err != nil {
 		log.Fatalln(err)
+		return
+	}
+
+	//initial upgrade
+	upgrade_err := client.Upgrade(true)
+	if upgrade_err != nil {
+		log.Fatalln(upgrade_err)
 		return
 	}
 

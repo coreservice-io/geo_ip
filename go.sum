@@ -1,6 +1,6 @@
 github.com/coreservice-io/job v0.1.20 h1:eCtVkB5MrCK9K7XFUu2X6D894H3mzy+puLl3HFC6yic=
 github.com/coreservice-io/job v0.1.20/go.mod h1:79+xxo1XzAYSyFXmOhsSzgzqKL0J40dVOtH0fhu3ORs=
-github.com/coreservice-io/package_client v0.0.11 h1:gXbVJjxkdLlRqINkgkxZhQTXn7ypqrwFa4OwyrWPdWs=
-github.com/coreservice-io/package_client v0.0.11/go.mod h1:JuG1JyAW5mebmdssIIIxPQj8DwUxLwaBYJxpGpVEV7I=
+github.com/coreservice-io/package_client v0.0.12 h1:8cWICc1HNPeglbb8FIzdmKg/PUOgJE9NgPm7Nw4/mkE=
+github.com/coreservice-io/package_client v0.0.12/go.mod h1:JuG1JyAW5mebmdssIIIxPQj8DwUxLwaBYJxpGpVEV7I=
 github.com/imroc/req v0.3.2 h1:M/JkeU6RPmX+WYvT2vaaOL0K+q8ufL5LxwvJc4xeB4o=
 github.com/imroc/req v0.3.2/go.mod h1:F+NZ+2EFSo6EFXdeIbpfE9hcC233id70kf0byW97Caw=
