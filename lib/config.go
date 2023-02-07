@@ -1,5 +1,4 @@
 package lib
 
 const AUTO_UPDATE_CONFIG_PACKAGEID = 33
-const AUTO_UPDATE_CONFIG_TOKEN = "bjjabhgltrrwljrdhlqjdqks"
 const AUTO_UPDATE_CONFIG_UPDATE_INTERVAL_SECS = 300
