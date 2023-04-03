@@ -55,7 +55,7 @@ func IpToBigInt(ip net.IP) (*big.Int, error) {
 }
 
 // iptype ="ipv4" or "ipv6"
-func (geoip_c *GeoIpClient) init_country(country_abs_file string, ip_type string) error {
+func (geoip_c *GeoIpClient) init_country(country_abs_file string, ip_type string, logger func(log_str string), err_logger func(err_log_str string)) error {
 
 	if ip_type != "ipv4" && ip_type != "ipv6" {
 		return errors.New("ip_type error ,only 'ipv4' or 'ipv6' allowed")
@@ -77,6 +77,11 @@ func (geoip_c *GeoIpClient) init_country(country_abs_file string, ip_type string
 
 		line := country_ip_scanner.Text()
 		line_split_array := strings.Split(line, ",")
+
+		if _, exist := data.CountryList[line_split_array[1]]; !exist {
+			err_logger("init_country scan line err, line:" + line)
+			continue
+		}
 
 		record := SORT_COUNTRY_IP{
 			Start_ip:       line_split_array[0],
@@ -153,7 +158,7 @@ func (geoip_c *GeoIpClient) init_country(country_abs_file string, ip_type string
 }
 
 // iptype ="ipv4" or "ipv6"
-func (geoip_c *GeoIpClient) init_isp(isp_abs_file string, ip_type string) error {
+func (geoip_c *GeoIpClient) init_isp(isp_abs_file string, ip_type string, logger func(log_str string), err_logger func(err_log_str string)) error {
 
 	if ip_type != "ipv4" && ip_type != "ipv6" {
 		return errors.New("ip_type error ,only 'ipv4' or 'ipv6' allowed")
@@ -238,7 +243,7 @@ func (geoip_c *GeoIpClient) init_isp(isp_abs_file string, ip_type string) error 
 	return nil
 }
 
-func (gip_client *GeoIpClient) ReloadCsv(datafolder string) error {
+func (gip_client *GeoIpClient) ReloadCsv(datafolder string, logger func(log_str string), err_logger func(err_log_str string)) error {
 
 	country_ipv4_file_abs := filepath.Join(datafolder, "country_ipv4.csv")
 	country_ipv6_file_abs := filepath.Join(datafolder, "country_ipv6.csv")
@@ -246,22 +251,22 @@ func (gip_client *GeoIpClient) ReloadCsv(datafolder string) error {
 	isp_ipv6_file_abs := filepath.Join(datafolder, "isp_ipv6.csv")
 
 	////
-	err := gip_client.init_country(country_ipv4_file_abs, "ipv4")
+	err := gip_client.init_country(country_ipv4_file_abs, "ipv4", logger, err_logger)
 	if err != nil {
 		return err
 	}
 	///
-	err = gip_client.init_country(country_ipv6_file_abs, "ipv6")
+	err = gip_client.init_country(country_ipv6_file_abs, "ipv6", logger, err_logger)
 	if err != nil {
 		return err
 	}
 	///
-	err = gip_client.init_isp(isp_ipv4_file_abs, "ipv4")
+	err = gip_client.init_isp(isp_ipv4_file_abs, "ipv4", logger, err_logger)
 	if err != nil {
 		return err
 	}
 	///
-	err = gip_client.init_isp(isp_ipv6_file_abs, "ipv6")
+	err = gip_client.init_isp(isp_ipv6_file_abs, "ipv6", logger, err_logger)
 	if err != nil {
 		return err
 	}
@@ -273,7 +278,7 @@ func NewClient(update_key string, current_version string, datafolder string, ign
 
 	client := &GeoIpClient{}
 	if !ignore_data_exist {
-		load_err := client.ReloadCsv(datafolder)
+		load_err := client.ReloadCsv(datafolder, logger, err_logger)
 		if load_err != nil {
 			logger("load_err:" + load_err.Error())
 			return nil, load_err
@@ -281,7 +286,7 @@ func NewClient(update_key string, current_version string, datafolder string, ign
 	}
 	///
 	pc, err := StartAutoUpdate(update_key, current_version, false, datafolder, func() {
-		client.ReloadCsv(datafolder)
+		client.ReloadCsv(datafolder, logger, err_logger)
 	}, logger, err_logger)
 
 	if err != nil {
