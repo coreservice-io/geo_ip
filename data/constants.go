@@ -12,6 +12,7 @@ var ContinentList = map[string]string{
 	"AF": "Africa",
 	"AN": "Antarctica",
 	"OC": "Oceania",
+	NA:   NA,
 }
 
 type CountryData struct {
@@ -276,4 +277,5 @@ var CountryList = map[string]CountryData{
 	"ZA": {"ZA", "South Africa", "AF", "Africa"},
 	"ZM": {"ZM", "Zambia", "AF", "Africa"},
 	"ZW": {"ZW", "Zimbabwe", "AF", "Africa"},
+	NA:   {NA, NA, NA, NA},
 }
