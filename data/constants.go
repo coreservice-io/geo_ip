@@ -2,7 +2,7 @@ package data
 
 const AllContinent = "AllContinent"
 const AllCountry = "AllCountry"
-const NA = "N/A"
+const NA = "ZZ"
 
 var ContinentList = map[string]string{
 	"EU": "Europe",
@@ -272,6 +272,7 @@ var CountryList = map[string]CountryData{
 	"VU": {"VU", "Vanuatu", "OC", "Oceania"},
 	"WF": {"WF", "Wallis and Futuna", "OC", "Oceania"},
 	"WS": {"WS", "Samoa", "OC", "Oceania"},
+	"XK": {"XK", "Kosovo", "EU", "Europe"},
 	"YE": {"YE", "Yemen", "AS", "Asia"},
 	"YT": {"YT", "Mayotte", "AF", "Africa"},
 	"ZA": {"ZA", "South Africa", "AF", "Africa"},
