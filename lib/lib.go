@@ -3,6 +3,7 @@ package lib
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"math/big"
 	"net"
 	"os"
@@ -73,10 +74,12 @@ func (geoip_c *GeoIpClient) init_country(country_abs_file string, ip_type string
 
 	country_ip_scanner := bufio.NewScanner(country_ip_f)
 
+	line_no := 0
 	for country_ip_scanner.Scan() {
-
+		line_no = line_no + 1
 		line := country_ip_scanner.Text()
-		line_split_array := strings.Split(line, ",")
+		line_f := strings.ReplaceAll(line, "\\,", " ")
+		line_split_array := strings.Split(line_f, ",")
 
 		if _, exist := data.CountryList[line_split_array[1]]; !exist {
 			err_logger("init_country scan line err, line:" + line)
@@ -91,16 +94,23 @@ func (geoip_c *GeoIpClient) init_country(country_abs_file string, ip_type string
 			City:           line_split_array[3],
 		}
 
-		if lati, err := strconv.ParseFloat(line_split_array[4], 64); err != nil {
-			return err
+		if line_split_array[4] == "" || line_split_array[5] == "" {
+			record.Latitude = 0
+			record.Longitude = 0
 		} else {
-			record.Latitude = lati
-		}
+			if lati, err := strconv.ParseFloat(line_split_array[4], 64); err != nil {
+				return fmt.Errorf("init_country scan line err '%s':%d. Err: %s", line, line_no, err.Error())
+				// return err
+			} else {
+				record.Latitude = lati
+			}
 
-		if longti, err := strconv.ParseFloat(line_split_array[5], 64); err != nil {
-			return err
-		} else {
-			record.Longitude = longti
+			if longti, err := strconv.ParseFloat(line_split_array[5], 64); err != nil {
+				return fmt.Errorf("init_country scan line err '%s':%d. Err: %s", line, line_no, err.Error())
+				// return err
+			} else {
+				record.Longitude = longti
+			}
 		}
 
 		/////////////
