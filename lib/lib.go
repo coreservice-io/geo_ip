@@ -55,22 +55,88 @@ func IpToBigInt(ip net.IP) (*big.Int, error) {
 	}
 }
 
-// iptype ="ipv4" or "ipv6"
-func (geoip_c *GeoIpClient) init_country(country_abs_file string, ip_type string, logger func(log_str string), err_logger func(err_log_str string)) error {
-
-	if ip_type != "ipv4" && ip_type != "ipv6" {
-		return errors.New("ip_type error ,only 'ipv4' or 'ipv6' allowed")
+func ip_convert_num_ipv4(ip string) (*big.Int, error) {
+	ipv := net.ParseIP(ip)
+	if ipv.To4() == nil {
+		return nil, errors.New(ip + " is not ipv4")
 	}
+	return IpToBigInt(ipv)
+}
+
+func ip_convert_num_ipv6(ip string) (*big.Int, error) {
+	ipv := net.ParseIP(ip)
+	if ipv.To16() == nil {
+		return nil, errors.New(ip + " is not ipv6")
+	}
+	return IpToBigInt(ipv)
+}
+
+func line_parser_ip(line string, lineno int) (*SORT_COUNTRY_IP, error) {
+	line_f := strings.ReplaceAll(line, "\\,", " ")
+	line_split_array := strings.Split(line_f, ",")
+
+	if _, exist := data.CountryList[line_split_array[1]]; !exist {
+		return nil, fmt.Errorf("parser line err '%s'", line)
+	}
+
+	record := &SORT_COUNTRY_IP{
+		Start_ip:       line_split_array[0],
+		Start_ip_score: nil,
+		Country_code:   line_split_array[1],
+		Region:         line_split_array[2],
+		City:           line_split_array[3],
+	}
+
+	if line_split_array[4] == "" || line_split_array[5] == "" {
+		record.Latitude = 0
+		record.Longitude = 0
+	} else {
+		if lati, err := strconv.ParseFloat(line_split_array[4], 64); err != nil {
+			return nil, fmt.Errorf("parser line err '%s':%d. Err: %s", line, lineno, err.Error())
+		} else {
+			record.Latitude = lati
+		}
+
+		if longti, err := strconv.ParseFloat(line_split_array[5], 64); err != nil {
+			return nil, fmt.Errorf("parser line err '%s':%d. Err: %s", line, lineno, err.Error())
+		} else {
+			record.Longitude = longti
+		}
+	}
+
+	return record, nil
+}
+
+func line_parser_isp(line string, lineno int) (*SORT_ISP_IP, error) {
+	line_split_array := strings.Split(line, ",")
+
+	record := &SORT_ISP_IP{
+		Start_ip:       line_split_array[0],
+		Start_ip_score: nil,
+		Asn:            line_split_array[1],
+		Isp:            line_split_array[3],
+	}
+
+	if strings.Trim(line_split_array[2], " ") == "1" {
+		record.Is_datacenter = true
+	} else {
+		record.Is_datacenter = false
+	}
+
+	return record, nil
+}
+
+func init_country(country_abs_file string,
+	ip_convert func(ip string) (*big.Int, error)) ([]SORT_COUNTRY_IP, error) {
 
 	///////////////////// country ipv4 //////////////////////////////////////////
 	country_ip_f, err := os.Open(country_abs_file)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer country_ip_f.Close()
 
-	country_ipv4_list := []SORT_COUNTRY_IP{}
-	country_ipv6_list := []SORT_COUNTRY_IP{}
+	country_ip_list := []SORT_COUNTRY_IP{}
 
 	country_ip_scanner := bufio.NewScanner(country_ip_f)
 
@@ -78,182 +144,72 @@ func (geoip_c *GeoIpClient) init_country(country_abs_file string, ip_type string
 	for country_ip_scanner.Scan() {
 		line_no = line_no + 1
 		line := country_ip_scanner.Text()
-		line_f := strings.ReplaceAll(line, "\\,", " ")
-		line_split_array := strings.Split(line_f, ",")
 
-		if _, exist := data.CountryList[line_split_array[1]]; !exist {
-			err_logger("init_country scan line err, line:" + line)
-			continue
-		}
-
-		record := SORT_COUNTRY_IP{
-			Start_ip:       line_split_array[0],
-			Start_ip_score: nil,
-			Country_code:   line_split_array[1],
-			Region:         line_split_array[2],
-			City:           line_split_array[3],
-		}
-
-		if line_split_array[4] == "" || line_split_array[5] == "" {
-			record.Latitude = 0
-			record.Longitude = 0
-		} else {
-			if lati, err := strconv.ParseFloat(line_split_array[4], 64); err != nil {
-				return fmt.Errorf("init_country scan line err '%s':%d. Err: %s", line, line_no, err.Error())
-				// return err
-			} else {
-				record.Latitude = lati
-			}
-
-			if longti, err := strconv.ParseFloat(line_split_array[5], 64); err != nil {
-				return fmt.Errorf("init_country scan line err '%s':%d. Err: %s", line, line_no, err.Error())
-				// return err
-			} else {
-				record.Longitude = longti
-			}
+		record, perr := line_parser_ip(line, line_no)
+		if perr != nil {
+			return nil, perr
 		}
 
 		/////////////
-		if ip_type == "ipv4" {
-			ipv4_ := net.ParseIP(line_split_array[0])
-			if ipv4_.To4() == nil {
-				return errors.New(line_split_array[0] + "is not ipv4 [country]")
-			}
-			ipint, err := IpToBigInt(ipv4_)
-			if err != nil {
-				return err
-			}
-			record.Start_ip_score = ipint
-			country_ipv4_list = append(country_ipv4_list, record)
-		} else {
-
-			ipv6_ := net.ParseIP(line_split_array[0])
-			if ipv6_.To16() == nil {
-				return errors.New(line_split_array[0] + "is not ipv6 [country]")
-			}
-			ipint, err := IpToBigInt(ipv6_)
-			if err != nil {
-				return err
-			}
-			record.Start_ip_score = ipint
-			country_ipv6_list = append(country_ipv6_list, record)
+		ipint, err := ip_convert(record.Start_ip)
+		if err != nil {
+			return nil, err
 		}
+		record.Start_ip_score = ipint
+		country_ip_list = append(country_ip_list, *record)
 	}
 
-	if ip_type == "ipv4" {
-		//////// sort  start ip desc ///////////////////
-		sort.SliceStable(country_ipv4_list, func(i, j int) bool {
-			return country_ipv4_list[i].Start_ip_score.Cmp(country_ipv4_list[j].Start_ip_score) == 1
-		})
-		////
-		if len(country_ipv4_list) == 0 {
-			return errors.New("country_ipv4_list len :0 ")
-		}
+	//////// sort  start ip desc ///////////////////
+	sort.SliceStable(country_ip_list, func(i, j int) bool {
+		return country_ip_list[i].Start_ip_score.Cmp(country_ip_list[j].Start_ip_score) == 1
+	})
 
-		geoip_c.country_ipv4_list = country_ipv4_list
-
-	} else {
-		//////// sort  start ip desc ///////////////////
-		sort.SliceStable(country_ipv6_list, func(i, j int) bool {
-			return country_ipv6_list[i].Start_ip_score.Cmp(country_ipv6_list[j].Start_ip_score) == 1
-		})
-		if len(country_ipv6_list) == 0 {
-			return errors.New("country_ipv6_list len :0 ")
-		}
-
-		geoip_c.country_ipv6_list = country_ipv6_list
-	}
-
-	return nil
+	return country_ip_list, nil
 }
 
-// iptype ="ipv4" or "ipv6"
-func (geoip_c *GeoIpClient) init_isp(isp_abs_file string, ip_type string, logger func(log_str string), err_logger func(err_log_str string)) error {
-
-	if ip_type != "ipv4" && ip_type != "ipv6" {
-		return errors.New("ip_type error ,only 'ipv4' or 'ipv6' allowed")
-	}
+func init_isp(isp_abs_file string,
+	ip_convert func(ip string) (*big.Int, error)) ([]SORT_ISP_IP, error) {
 
 	///////////////////// country ipv4 //////////////////////////////////////////
 	isp_ip_f, err := os.Open(isp_abs_file)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer isp_ip_f.Close()
 
-	isp_ipv4_list := []SORT_ISP_IP{}
-	isp_ipv6_list := []SORT_ISP_IP{}
+	isp_ip_list := []SORT_ISP_IP{}
 
 	isp_ip_scanner := bufio.NewScanner(isp_ip_f)
 
+	line_no := 0
 	for isp_ip_scanner.Scan() {
-
+		line_no = line_no + 1
 		line := isp_ip_scanner.Text()
-		line_split_array := strings.Split(line, ",")
 
-		record := SORT_ISP_IP{
-			Start_ip:       line_split_array[0],
-			Start_ip_score: nil,
-			Asn:            line_split_array[1],
-			Isp:            line_split_array[3],
-		}
-
-		if strings.Trim(line_split_array[2], " ") == "1" {
-			record.Is_datacenter = true
-		} else {
-			record.Is_datacenter = false
+		record, perr := line_parser_isp(line, line_no)
+		if perr != nil {
+			return nil, perr
 		}
 
 		/////////////
-		if ip_type == "ipv4" {
-			ipv4_ := net.ParseIP(record.Start_ip)
-			if ipv4_.To4() == nil {
-				return errors.New(record.Start_ip + " is not ipv4 [isp]")
-			}
-			ipint, err := IpToBigInt(ipv4_)
-			if err != nil {
-				return err
-			}
-			record.Start_ip_score = ipint
-			isp_ipv4_list = append(isp_ipv4_list, record)
-		} else {
-			ipv6_ := net.ParseIP(record.Start_ip)
-			if ipv6_.To16() == nil {
-				return errors.New(record.Start_ip + " is not ipv6 [isp]")
-			}
-			ipint, err := IpToBigInt(ipv6_)
-			if err != nil {
-				return err
-			}
-			record.Start_ip_score = ipint
-			isp_ipv6_list = append(isp_ipv6_list, record)
+		ipint, err := ip_convert(record.Start_ip)
+		if err != nil {
+			return nil, err
 		}
+		record.Start_ip_score = ipint
+		isp_ip_list = append(isp_ip_list, *record)
 	}
 
-	if ip_type == "ipv4" {
-		//////// sort  start ip desc ///////////////////
-		sort.SliceStable(isp_ipv4_list, func(i, j int) bool {
-			return isp_ipv4_list[i].Start_ip_score.Cmp(isp_ipv4_list[j].Start_ip_score) == 1
-		})
-		if len(isp_ipv4_list) == 0 {
-			return errors.New("isp_ipv4_list len :0 ")
-		}
-		geoip_c.isp_ipv4_list = isp_ipv4_list
-	} else {
-		//////// sort  start ip desc ///////////////////
-		sort.SliceStable(isp_ipv6_list, func(i, j int) bool {
-			return isp_ipv6_list[i].Start_ip_score.Cmp(isp_ipv6_list[j].Start_ip_score) == 1
-		})
-		if len(isp_ipv6_list) == 0 {
-			return errors.New("isp_ipv6_list len :0 ")
-		}
-		geoip_c.isp_ipv6_list = isp_ipv6_list
-	}
+	//////// sort  start ip desc ///////////////////
+	sort.SliceStable(isp_ip_list, func(i, j int) bool {
+		return isp_ip_list[i].Start_ip_score.Cmp(isp_ip_list[j].Start_ip_score) == 1
+	})
 
-	return nil
+	return isp_ip_list, nil
 }
 
-func (gip_client *GeoIpClient) ReloadCsv(datafolder string, logger func(log_str string), err_logger func(err_log_str string)) error {
+func (geoip_c *GeoIpClient) ReloadCsv(datafolder string,
+	logger func(log_str string), err_logger func(err_log_str string)) error {
 
 	country_ipv4_file_abs := filepath.Join(datafolder, "country_ipv4.csv")
 	country_ipv6_file_abs := filepath.Join(datafolder, "country_ipv6.csv")
@@ -261,30 +217,48 @@ func (gip_client *GeoIpClient) ReloadCsv(datafolder string, logger func(log_str 
 	isp_ipv6_file_abs := filepath.Join(datafolder, "isp_ipv6.csv")
 
 	////
-	err := gip_client.init_country(country_ipv4_file_abs, "ipv4", logger, err_logger)
-	if err != nil {
+	if country_ip_list, err := init_country(country_ipv4_file_abs, ip_convert_num_ipv4); err != nil {
 		return err
+	} else {
+		if len(country_ip_list) == 0 {
+			return errors.New("country_ipv4 len :0 ")
+		}
+		geoip_c.country_ipv4_list = country_ip_list
 	}
 	///
-	err = gip_client.init_country(country_ipv6_file_abs, "ipv6", logger, err_logger)
-	if err != nil {
+	if country_ip_list, err := init_country(country_ipv6_file_abs, ip_convert_num_ipv6); err != nil {
 		return err
+	} else {
+		if len(country_ip_list) == 0 {
+			return errors.New("country_ipv6 len :0 ")
+		}
+		geoip_c.country_ipv6_list = country_ip_list
+	}
+
+	///
+	if isp_ip_list, err := init_isp(isp_ipv4_file_abs, ip_convert_num_ipv4); err != nil {
+		return err
+	} else {
+		if len(isp_ip_list) == 0 {
+			return errors.New("isp_ipv4 len :0 ")
+		}
+		geoip_c.isp_ipv4_list = isp_ip_list
 	}
 	///
-	err = gip_client.init_isp(isp_ipv4_file_abs, "ipv4", logger, err_logger)
-	if err != nil {
+	if isp_ip_list, err := init_isp(isp_ipv6_file_abs, ip_convert_num_ipv6); err != nil {
 		return err
-	}
-	///
-	err = gip_client.init_isp(isp_ipv6_file_abs, "ipv6", logger, err_logger)
-	if err != nil {
-		return err
+	} else {
+		if len(isp_ip_list) == 0 {
+			return errors.New("isp_ipv6 len :0 ")
+		}
+		geoip_c.isp_ipv6_list = isp_ip_list
 	}
 
 	return nil
 }
 
-func NewClient(update_key string, current_version string, datafolder string, ignore_data_exist bool, logger func(log_str string), err_logger func(err_log_str string)) (GeoIpInterface, error) {
+func NewClient(update_key string, current_version string, datafolder string, ignore_data_exist bool,
+	logger func(log_str string), err_logger func(err_log_str string)) (GeoIpInterface, error) {
 
 	client := &GeoIpClient{}
 	if !ignore_data_exist {
@@ -308,18 +282,16 @@ func NewClient(update_key string, current_version string, datafolder string, ign
 	return client, nil
 }
 
-func (i *GeoIpClient) Upgrade(ignore_version bool) error {
-	return i.pc.Update(ignore_version)
+func (geoip_c *GeoIpClient) Upgrade(ignore_version bool) error {
+	return geoip_c.pc.Update(ignore_version)
 }
 
-func (i *GeoIpClient) GetInfo(target_ip string) (*GeoInfo, error) {
+func (geoip_c *GeoIpClient) GetInfo(target_ip string) (*GeoInfo, error) {
 
-	//pre check ip
-	isLan, err := data.IsLanIp(target_ip)
-	if err != nil {
+	// pre check ip
+	if isLan, err := data.IsLanIp(target_ip); err != nil {
 		return nil, err
-	}
-	if isLan {
+	} else if isLan {
 		return nil, errors.New("is lan ip")
 	}
 
@@ -339,6 +311,15 @@ func (i *GeoIpClient) GetInfo(target_ip string) (*GeoInfo, error) {
 		return nil, err
 	}
 
+	//////////////
+	search_country := geoip_c.country_ipv4_list
+	search_isp := geoip_c.isp_ipv4_list
+
+	if ip_type == "ipv6" {
+		search_country = geoip_c.country_ipv6_list
+		search_isp = geoip_c.isp_ipv6_list
+	}
+	////
 	result := GeoInfo{
 		Ip:             target_ip,
 		Latitude:       0,
@@ -354,34 +335,12 @@ func (i *GeoIpClient) GetInfo(target_ip string) (*GeoInfo, error) {
 		Is_datacenter:  false,
 	}
 
-	//////////////
-	search_country := i.country_ipv4_list
-	search_isp := i.isp_ipv4_list
-
-	if ip_type == "ipv6" {
-		search_country = i.country_ipv6_list
-		search_isp = i.isp_ipv6_list
-	}
-	////
-
 	country_index := sort.Search(len(search_country), func(j int) bool {
 		return search_country[j].Start_ip_score.Cmp(target_ip_score) <= 0
 	})
 
-	//fmt.Println(country_index)
-
 	if country_index >= 0 && country_index < len(search_country) {
-		result.Latitude = search_country[country_index].Latitude
-		result.Longitude = search_country[country_index].Longitude
-		result.Country_code = search_country[country_index].Country_code
-		result.Region = search_country[country_index].Region
-		result.City = search_country[country_index].City
-
-		if val, ok := data.CountryList[result.Country_code]; ok {
-			result.Continent_code = val.ContinentCode
-			result.Continent_name = val.ContinentName
-			result.Country_name = val.CountryName
-		}
+		fillGeoInfo(&result, &search_country[country_index])
 	}
 
 	//
@@ -390,10 +349,28 @@ func (i *GeoIpClient) GetInfo(target_ip string) (*GeoInfo, error) {
 	})
 
 	if isp_index >= 0 && isp_index < len(search_isp) {
-		result.Asn = search_isp[isp_index].Asn
-		result.Isp = search_isp[isp_index].Isp
-		result.Is_datacenter = search_isp[isp_index].Is_datacenter
+		fillIspInfo(&result, &search_isp[isp_index])
 	}
 
 	return &result, nil
+}
+
+func fillGeoInfo(result *GeoInfo, info *SORT_COUNTRY_IP) {
+	result.Latitude = info.Latitude
+	result.Longitude = info.Longitude
+	result.Country_code = info.Country_code
+	result.Region = info.Region
+	result.City = info.City
+
+	if val, ok := data.CountryList[result.Country_code]; ok {
+		result.Continent_code = val.ContinentCode
+		result.Continent_name = val.ContinentName
+		result.Country_name = val.CountryName
+	}
+}
+
+func fillIspInfo(result *GeoInfo, info *SORT_ISP_IP) {
+	result.Asn = info.Asn
+	result.Isp = info.Isp
+	result.Is_datacenter = info.Is_datacenter
 }
