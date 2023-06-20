@@ -40,5 +40,4 @@ func IsLanIp(ip string) (bool, error) {
 	}
 
 	return false, nil
-
 }
