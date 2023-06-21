@@ -38,6 +38,9 @@ func (s *IspSearcher) LoadFile(isp_abs_file string, ip_convert func(ip string) (
 		if perr != nil {
 			return perr
 		}
+		if record == nil {
+			continue
+		}
 
 		/////////////
 		ipint, err := ip_convert(record.Start_ip)

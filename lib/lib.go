@@ -33,12 +33,7 @@ type GeoIpClient struct {
 	country_ipv6_searcher *CountrySearcher
 	isp_ipv4_searcher     *IspSearcher
 	isp_ipv6_searcher     *IspSearcher
-
-	country_ipv4_list []SORT_COUNTRY_IP
-	country_ipv6_list []SORT_COUNTRY_IP
-	isp_ipv4_list     []SORT_ISP_IP
-	isp_ipv6_list     []SORT_ISP_IP
-	pc                *package_client.PackageClient
+	pc                    *package_client.PackageClient
 }
 
 // / the second int is 32 for ipv4 or 128 for ipv6

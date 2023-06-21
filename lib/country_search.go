@@ -45,6 +45,10 @@ func (s *CountrySearcher) LoadFile(country_abs_file string,
 			return perr
 		}
 
+		if record == nil {
+			continue
+		}
+
 		/////////////
 		ipint, err := ip_convert(record.Start_ip)
 		if err != nil {
@@ -84,6 +88,9 @@ func line_parser_ip(line string, lineno int) (*SORT_COUNTRY_IP, error) {
 	line_f := strings.ReplaceAll(line, "\\,", " ")
 	line_split_array := strings.Split(line_f, ",")
 
+	if line_split_array[1] == "" {
+		return nil, nil
+	}
 	if _, exist := data.CountryList[line_split_array[1]]; !exist {
 		return nil, fmt.Errorf("parser line err '%s'", line)
 	}
