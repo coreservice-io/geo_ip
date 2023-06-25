@@ -10,6 +10,8 @@ import (
 	"github.com/coreservice-io/package_client"
 )
 
+const NEW_SEARCHER_IPV4 = true
+
 type SORT_ISP_IP struct {
 	Start_ip       string
 	Start_ip_score *big.Int
@@ -33,7 +35,20 @@ type GeoIpClient struct {
 	country_ipv6_searcher *CountrySearcher
 	isp_ipv4_searcher     *IspSearcher
 	isp_ipv6_searcher     *IspSearcher
+	ipv4_searcher         *Searcher
 	pc                    *package_client.PackageClient
+}
+
+func GetEmptyCountryIP() *SORT_COUNTRY_IP {
+	return &SORT_COUNTRY_IP{
+		"0.0.0.0",
+		big.NewInt(0),
+		"ZZ",
+		"",
+		"",
+		0.000000,
+		0.000000,
+	}
 }
 
 // / the second int is 32 for ipv4 or 128 for ipv6
@@ -74,13 +89,25 @@ func (geoip_c *GeoIpClient) ReloadCsv(datafolder string,
 	isp_ipv6_file_abs := filepath.Join(datafolder, "isp_ipv6.csv")
 
 	////
-	country_ipv4_searcher := NewCountrySearcher()
+	if !NEW_SEARCHER_IPV4 {
 
-	if err := country_ipv4_searcher.LoadFile(country_ipv4_file_abs, ip_convert_num_ipv4); err != nil {
-		return err
+		country_ipv4_searcher := NewCountrySearcher()
+
+		if err := country_ipv4_searcher.LoadFile(country_ipv4_file_abs, ip_convert_num_ipv4); err != nil {
+			return err
+		} else {
+			geoip_c.country_ipv4_searcher = country_ipv4_searcher
+		}
 	} else {
-		geoip_c.country_ipv4_searcher = country_ipv4_searcher
+		ipv4_searcher := NewSearch()
+
+		if err := ipv4_searcher.LoadFile(country_ipv4_file_abs, ip_convert_num_ipv4); err != nil {
+			return err
+		} else {
+			geoip_c.ipv4_searcher = ipv4_searcher
+		}
 	}
+
 	///
 	country_ipv6_searcher := NewCountrySearcher()
 
@@ -188,12 +215,23 @@ func (geoip_c *GeoIpClient) GetInfo(target_ip string) (*GeoInfo, error) {
 		Is_datacenter:  false,
 	}
 
-	country_info := search_country.Search(target_ip_score)
+	var country_info *SORT_COUNTRY_IP
+	if NEW_SEARCHER_IPV4 && ip_type == "ipv4" {
+		ipv4_searcher := geoip_c.ipv4_searcher
+		country_info = ipv4_searcher.Search(target_ip, target_ip_score)
+	} else {
+		country_info = search_country.Search(target_ip_score)
+	}
 	isp_info := search_isp.Search(target_ip_score)
 
+	if country_info != nil {
+		fillGeoInfo(&result, country_info)
+	}
+
 	//
-	fillGeoInfo(&result, country_info)
-	fillIspInfo(&result, isp_info)
+	if isp_info != nil {
+		fillIspInfo(&result, isp_info)
+	}
 
 	return &result, nil
 }

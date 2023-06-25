@@ -73,11 +73,12 @@ func (s *CountrySearcher) LoadFile(country_abs_file string,
 
 func (s *CountrySearcher) Search(target_ip_score *big.Int) *SORT_COUNTRY_IP {
 
-	country_index := sort.Search(len(s.country_ip_list), func(j int) bool {
+	c_len := len(s.country_ip_list)
+	country_index := sort.Search(c_len, func(j int) bool {
 		return s.country_ip_list[j].Start_ip_score.Cmp(target_ip_score) <= 0
 	})
 
-	if country_index >= 0 && country_index < len(s.country_ip_list) {
+	if country_index >= 0 && country_index < c_len {
 		return &(s.country_ip_list[country_index])
 	}
 
